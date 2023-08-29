@@ -1,52 +1,47 @@
 package repositories
 
 import (
-	"encoding/json"
-	"fiberTodo/models"
+	"fmt"
+	"sync"
 
-	"github.com/gofiber/storage/sqlite3/v2"
+	"github.com/go-rel/rel"
+	"github.com/go-rel/sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type TodoStore struct {
-    Store *sqlite3.Storage
+type SQLiteRepository struct {
+    repository rel.Repository
 }
 
-type Todos map[string]*models.Todo
+const DB_FILE = "dev.db"
+var lock = &sync.Mutex{}
+var repository *rel.Repository
 
-const (
-    todosKey = "todos"
-)
-
-var TodoRepository *TodoStore
-var todos Todos // should be a pointer as maps are always passed by reference
-
-func GetTodoRepository() *TodoStore {
-    if TodoRepository == nil {
-        TodoRepository = &TodoStore{
-            Store: sqlite3.New(),
+func GetRepository() (*rel.Repository, error) {
+    if repository == nil {
+        lock.Lock()
+        defer lock.Unlock()
+        if repository == nil {
+            var err error
+            fmt.Println("Instantiating new repository")
+            repository, err = initialize()
+            if err != nil {
+                return nil, err
+            }
         }
+    } else {
+        fmt.Println("Repository already instantiated")
     }
-    return TodoRepository
+    return repository, nil
 }
 
-func (t *TodoStore) Load() (Todos, error) {
-    if todos != nil {
-        return todos, nil
-    }
-    rawTodos, err := t.Store.Get(todosKey)
-    if err != nil {
-        return Todos{}, err
-    }
-    todosRef := &Todos{}
-    json.Unmarshal(rawTodos, todosRef)
-    todos = *todosRef
-    return todos, nil
-}
+func initialize() (*rel.Repository, error) {
+	adapter, err := sqlite3.Open(DB_FILE)
+	if err != nil {
+        return nil, err
+	}
+	//defer adapter.Close()
 
-func (t *TodoStore) Save(val Todos) error {
-    rawTodos, err := json.Marshal(val)
-    if err != nil {
-        return err
-    }
-    return t.Store.Set(todosKey, rawTodos, 0)
+    repo := rel.New(adapter)
+    return &repo, nil
 }

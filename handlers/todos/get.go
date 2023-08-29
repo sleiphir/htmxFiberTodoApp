@@ -7,7 +7,7 @@ import (
 )
 
 func GetEdit(c *fiber.Ctx) error {
-    todos, _ := repositories.GetTodoRepository().Load()
+    // repo, _ := repositories.GetRepository()
     id := c.Params("id")
     if _, ok := todos[id]; !ok {
         return c.Status(404).SendString("Not Found")
