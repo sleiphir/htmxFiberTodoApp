@@ -1,14 +1,14 @@
 package main
 
 import (
-	"encoding/json"
+    "encoding/json"
     "github.com/google/uuid"
-	"log"
+    "log"
     "os"
     "strings"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/storage/sqlite3/v2"
-	"github.com/gofiber/template/html/v2"
+    "github.com/gofiber/fiber/v2"
+    "github.com/gofiber/storage/sqlite3/v2"
+    "github.com/gofiber/template/html/v2"
 )
 
 type Todo struct {
